@@ -1,0 +1,14 @@
+# Gate-3 verification half: greedy generation on the SAME 100 training
+# items (data.load is deterministic, so train/limit 100 = the train set).
+# Outputs should reproduce the references near-verbatim.
+name: arm2-e2e-overfit-gen
+backend: soft
+train_config: configs/arm2_e2e_overfit.yaml
+dataset: e2e_cleaned
+split: train
+limit: 100
+model: Qwen/Qwen2.5-0.5B-Instruct
+quantization: none
+max_new_tokens: 96
+batch_size: 4
+seed: 13

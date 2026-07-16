@@ -1,0 +1,16 @@
+# Fact-sheet arm, E2E pipeline validation on Groq (same 100 items as
+# e2e_groq_pilot.yaml). The E2E sheet is a near-null transformation
+# (8 attributes, nothing derived), included for protocol symmetry;
+# expected effect ~ 0.
+name: fs-e2e-pilot-groq
+backend: groq
+dataset: e2e_cleaned
+split: validation
+limit: 100
+model: llama-3.1-8b-instant
+prompt: e2e/faithful_v1
+serialisation: factsheet
+factsheet_version: v1
+max_new_tokens: 96
+request_interval: 2.0
+seed: 13

@@ -1,0 +1,15 @@
+# Fact-sheet arm, real run: frozen LLM, n=300 E2E. Near-null transformation,
+# run for protocol symmetry with the RotoWire arm comparison.
+# PLACEHOLDER prompt until the battery freezes the baseline prompt.
+name: fs-e2e-colab
+dataset: e2e_cleaned
+split: validation
+limit: 300
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+prompt: e2e/faithful_v1
+serialisation: factsheet
+factsheet_version: v1
+max_new_tokens: 96
+batch_size: 4
+seed: 13

@@ -1,0 +1,16 @@
+# Gate 4c: the random control — k random-but-fixed vectors in place of the
+# learned soft tokens, markdown table still present (proves augmentation
+# gains aren't just extra tokens). Anchored to the augmentation checkpoint
+# for k / hidden size.
+name: arm2-e2e-smoke-gen-random
+backend: soft
+train_config: configs/arm2_e2e_smoke_cpu_aug.yaml
+variant: random
+dataset: e2e_cleaned
+split: validation
+limit: 5
+model: Qwen/Qwen2.5-0.5B-Instruct
+quantization: none
+max_new_tokens: 80
+batch_size: 2
+seed: 13

@@ -1,0 +1,16 @@
+# Fact-sheet arm, Groq paired pilot: identical to rotowire_groq_pilot.yaml
+# except for the serialisation, and run on the SAME 50 validation games —
+# compare_runs.py against rw-pilot-groq gives the first prepared-vs-raw
+# comparison. Cross-family caveat: pilot signal, not a dissertation number.
+name: fs-rw-pilot-groq
+backend: groq
+dataset: rotowire
+split: validation
+limit: 50
+model: llama-3.1-8b-instant
+prompt: rotowire/faithful_v1
+serialisation: factsheet
+factsheet_version: v1
+max_new_tokens: 320
+request_interval: 2.0
+seed: 13

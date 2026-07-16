@@ -1,0 +1,29 @@
+# Gate 3, THE gate: 100 E2E items -> LM loss near zero and generation on
+# those same items reproduces references near-verbatim (see
+# arm2_e2e_overfit_gen.yaml). If this fails, nothing downstream is
+# trustworthy. CPU-overnight or free-T4; 0.5B keeps it feasible.
+name: arm2-e2e-overfit
+dataset: e2e_cleaned
+split: train
+limit: 100
+model: Qwen/Qwen2.5-0.5B-Instruct
+quantization: none
+prompt: e2e/faithful_v1
+variant: replacement
+k: 16
+d: 256
+n_heads: 4
+n_layers: 2
+qformer_layers: 1
+lr: 2.0e-4          # higher than production: the goal is memorisation
+warmup_ratio: 0.05
+max_steps: 1500
+batch_size: 4
+grad_accum: 1
+aux_weight: 0.3
+filter_references: false
+max_refs_per_example: 1
+max_ref_tokens: 128
+checkpoint_every: 100
+log_every: 10
+seed: 13

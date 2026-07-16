@@ -1,0 +1,11 @@
+# Metric-calibration pilot via Groq's free API — see e2e_groq_pilot.yaml.
+name: rw-pilot-groq
+backend: groq
+dataset: rotowire
+split: validation
+limit: 50
+model: llama-3.1-8b-instant
+prompt: rotowire/faithful_v1
+max_new_tokens: 320
+request_interval: 2.0
+seed: 13

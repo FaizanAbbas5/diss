@@ -1,0 +1,14 @@
+# CPU smoke for the fact-sheet arm (verification gate 3): tiny model,
+# 3 E2E items, serialisation: factsheet, end to end.
+name: fs-e2e-smoke-cpu
+dataset: e2e_cleaned
+split: validation
+limit: 3
+model: Qwen/Qwen2.5-0.5B-Instruct
+quantization: none
+prompt: e2e/faithful_v1
+serialisation: factsheet
+factsheet_version: v1
+max_new_tokens: 80
+batch_size: 1
+seed: 13

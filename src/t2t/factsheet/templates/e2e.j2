@@ -1,0 +1,8 @@
+{% for sec in sections %}
+{% if sec.header %}
+{{ sec.header }}
+{% endif %}
+{% for line in sec.lines %}
+{{ line }}
+{% endfor %}
+{% endfor %}

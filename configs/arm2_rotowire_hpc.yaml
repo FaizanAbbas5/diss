@@ -1,0 +1,31 @@
+# The HPC run: RotoWire training, 7B 4-bit NF4. One-command start:
+#   python experiments/run_training.py --config configs/arm2_rotowire_hpc.yaml
+# Resumable at any step (checkpoint.pt in the hashed run dir).
+# filter_references stays false until the E2E filtered-vs-unfiltered
+# ablation decides (plan.md W4/5 decision; ~45% of RotoWire claims are
+# extrinsic). Augmentation twin: arm2_rotowire_hpc_aug.yaml.
+name: arm2-rotowire-hpc
+dataset: rotowire
+split: train
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+gradient_checkpointing: true
+prompt: rotowire/faithful_v1   # update when the W2 battery freezes the baseline prompt
+variant: replacement
+k: 16
+d: 256
+n_heads: 4
+n_layers: 2
+qformer_layers: 1
+lr: 1.0e-4
+warmup_ratio: 0.05
+max_steps: 2000
+batch_size: 2
+grad_accum: 8
+aux_weight: 0.3
+filter_references: false
+max_refs_per_example: 1
+max_ref_tokens: 512
+checkpoint_every: 100
+log_every: 10
+seed: 13

@@ -1,0 +1,30 @@
+{{ result }}
+{% for r in records %}
+{{ r }}
+{% endfor %}
+
+Team totals:
+{% for line in team_lines %}
+{{ line }}
+{% endfor %}
+{% if leader_lines %}
+
+Team leaders:
+{% for line in leader_lines %}
+{{ line }}
+{% endfor %}
+{% endif %}
+{% if notables %}
+
+Notable performances:
+{% for s in notables %}
+{{ s }}
+{% endfor %}
+{% endif %}
+{% if secondary_lines %}
+
+Other scorers:
+{% for line in secondary_lines %}
+{{ line }}
+{% endfor %}
+{% endif %}
