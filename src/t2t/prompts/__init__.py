@@ -1,7 +1,7 @@
 """Prompt registry.
 
-The baseline prompt selected in week 2 gets frozen and reused verbatim by
-every arm; only the content of the {table} slot differs between arms.
+The baseline prompt is frozen and reused verbatim by every arm; only the
+content of the {table} slot differs between arms.
 
 A prompt spec may carry an "extract_marker": everything before the last
 occurrence of the marker is treated as scratch work (e.g. a fact list) and

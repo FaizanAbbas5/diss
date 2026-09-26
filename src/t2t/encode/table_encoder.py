@@ -1,6 +1,6 @@
 """Permutation-invariant table encoder -> k soft vectors -> projector.
 
-Architecture per docs/arm2-design.md:
+Architecture:
 cell = column-ID embedding + value encoding (numeric MLP / string hash
 buckets / learned null) -> row = masked mean of cells + key-cell value
 encoding -> 1-2 transformer layers over rows (no positional encoding, so

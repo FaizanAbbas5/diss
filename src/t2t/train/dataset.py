@@ -34,6 +34,7 @@ class Arm2Dataset(Dataset):
         filter_refs: bool = False,
         max_refs_per_example: int = 1,
         max_ref_tokens: int = 512,
+        serialise=to_markdown,
     ):
         if variant not in ("replacement", "augmentation"):
             raise ValueError(f"Cannot train variant {variant!r}")
@@ -47,7 +48,7 @@ class Arm2Dataset(Dataset):
             facts = GameFacts(ex.table)
             features = featurise_table(ex.table, vocab, stats)
             table_ids = (
-                tokenizer.encode(to_markdown(ex.table), add_special_tokens=False)
+                tokenizer.encode(serialise(ex.table), add_special_tokens=False)
                 if variant == "augmentation"
                 else None
             )

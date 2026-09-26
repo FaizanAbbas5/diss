@@ -2,7 +2,7 @@
 
 `markdown` is the frozen baseline serialisation; `factsheet` is the
 template arm's deterministic preparation. Generation backends resolve the
-serialiser from the config key `serialisation` — absent means markdown, so
+serialiser from the config key `serialisation`; absent means markdown, so
 every pre-registry config hash is untouched.
 """
 from __future__ import annotations

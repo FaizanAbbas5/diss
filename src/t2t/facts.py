@@ -1,23 +1,30 @@
 """Shared deterministic derivations from a box-score Table.
 
-Single source of truth for winner/margin/leader facts, used by BOTH the
+Single source of truth for winner/margin/leader facts, used by both the
 relational checker (t2t.eval.relations) and the fact-sheet serialiser
 (t2t.factsheet). Sharing one derivation makes the facts the sheet asserts
 and the facts the checker expects identical by construction; the shared-bug
-risk this creates is mitigated by this module's property tests, the week-3
-manual annotation of rendered sheets, and the arbiter metrics (NLI, PARENT,
-manual labels) that share no code with it — see docs/factsheet-arm-design.md.
+risk this creates is mitigated by this module's tests and by the arbiter
+metrics (NLI, PARENT) that share no code with it.
 
-The derivation core moved here verbatim from t2t.eval.relations, whose 15
-tests pin its behaviour. Only addition: FGM/FGA in the per-player stats
-dict — the fact sheet needs them for shooting lines; the checker never
-looks them up.
+FGM/FGA appear in the per-player stats dict for the fact sheet's shooting
+lines; the checker never looks them up.
 """
 from __future__ import annotations
 
 import re
 
 from .data.types import Section, Table
+
+
+_NAME_SUFFIXES = {"jr", "jr.", "sr", "sr.", "ii", "iii", "iv", "v"}
+
+
+def _surname(name: str) -> str:
+    """Last non-suffix token: 'Tim Hardaway Jr.' -> 'hardaway', so suffixed
+    players never alias to 'jr.'/'iii' (audit C6)."""
+    tokens = [t for t in name.split() if t.lower() not in _NAME_SUFFIXES]
+    return (tokens[-1] if tokens else name).lower()
 
 
 def team_section(table: Table) -> Section | None:
@@ -80,9 +87,9 @@ class GameFacts:
                 city = row[pcols["TEAM_CITY"]] if "TEAM_CITY" in pcols else None
                 self.player_rows[name] = {"stats": stats, "city": str(city or "")}
                 self.player_aliases[name.lower()] = name
-                surnames[name.split()[-1].lower()] = surnames.get(name.split()[-1].lower(), 0) + 1
+                surnames[_surname(name)] = surnames.get(_surname(name), 0) + 1
             for name in list(self.player_rows):
-                s = name.split()[-1].lower()
+                s = _surname(name)
                 if surnames[s] == 1:
                     self.player_aliases[s] = name
 
@@ -125,13 +132,30 @@ class GameFacts:
         return sorted((p, n) for n, p in found.items())
 
     def find_players(self, text_l: str) -> list[str]:
-        found = {}
+        return [n for _p, n in self.find_players_with_pos(text_l)]
+
+    def find_players_with_pos(self, text_l: str) -> list[tuple[int, str]]:
+        """(position, name) of each mentioned player's first mention;
+        the positional analogue of find_teams."""
+        first: dict[str, int] = {}
+        for pos, name in self.find_player_mentions(text_l):
+            if name not in first:
+                first[name] = pos
+        return sorted((p, n) for n, p in first.items())
+
+    def find_player_mentions(self, text_l: str) -> list[tuple[int, str]]:
+        """Every occurrence of every player alias, in text order; overlapping
+        matches resolved in favour of the longest (full name beats the
+        surname inside it)."""
+        matches: list[tuple[int, int, str]] = []
         for alias, name in self.player_aliases.items():
-            if self._find_alias(alias, text_l) >= 0:
-                found[name] = True
-        # drop players only matched via a substring of another matched name
-        names = list(found)
-        return [
-            n for n in names
-            if not any(n != o and n.lower() in o.lower() for o in names)
-        ]
+            for m in re.finditer(
+                r"(?<!\w)" + re.escape(alias) + r"(?!\w)", text_l
+            ):
+                matches.append((m.start(), m.end(), name))
+        matches.sort(key=lambda t: (t[0], -(t[1] - t[0])))
+        kept: list[tuple[int, int, str]] = []
+        for s, e, n in matches:
+            if all(e <= ks or s >= ke for ks, ke, _n in kept):
+                kept.append((s, e, n))
+        return [(s, n) for s, _e, n in sorted(kept)]

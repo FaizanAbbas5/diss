@@ -43,10 +43,13 @@ def load_model_and_tokenizer(model_name: str, quantization: str = "none"):
     elif quantization != "none":
         raise ValueError(f"Unknown quantization: {quantization!r}")
     elif torch.cuda.is_available():
-        kwargs["dtype"] = "auto"
+        # torch_dtype, not dtype: the renamed kwarg only exists in
+        # transformers >=4.56; the HPC stack is pinned to 4.41 (glibc
+        # ceiling) where unknown kwargs crash the model constructor.
+        kwargs["torch_dtype"] = "auto"
         kwargs["device_map"] = "auto"
     else:
-        kwargs["dtype"] = torch.float32
+        kwargs["torch_dtype"] = torch.float32
 
     model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
     model.eval()
@@ -55,7 +58,14 @@ def load_model_and_tokenizer(model_name: str, quantization: str = "none"):
 
 def _seq_logprob(token_ids, scores_row, eos_id: int) -> float | None:
     """Mean per-token log-probability up to and including the first EOS
-    (positions after EOS are padding in batched generation)."""
+    (positions after EOS are padding in batched generation).
+
+    Scope caveat (audit P1): computed over the FULL generation. For
+    two-stage prompts (structured_v1's scratch list + SUMMARY) this includes
+    scratch tokens that extract_final strips from the stored output, so
+    seq_logprob is NOT comparable between single-stage and two-stage
+    prompts. Comparisons are valid within a prompt family (all arms use the
+    frozen single-stage baseline prompt)."""
     lps: list[float] = []
     for tid, lp in zip(token_ids.tolist(), scores_row.tolist()):
         lps.append(lp)

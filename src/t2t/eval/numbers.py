@@ -2,10 +2,9 @@
 in the table or be derivable by simple arithmetic (same-column pairwise
 sums and absolute differences, e.g. victory margins or combined points).
 
-v0 limitations, documented for the write-up and to be validated against the
-week-3 manual pilot: digit numerals only (spelled-out numbers such as
+Known limitations: digit numerals only (spelled-out numbers such as
 "three-pointer" are ignored); derivations limited to pairwise same-column
-sums/differences.
+sums and differences.
 """
 from __future__ import annotations
 
@@ -13,10 +12,11 @@ import re
 
 from ..data.types import Table
 
-_NUM_RE = re.compile(r"\d{1,3}(?:,\d{3})+|\d+\.\d+|\d+")
+_NUM_RE = re.compile(r"\d{1,3}(?:,\d{3})+|\d+\.\d+|\.\d+|\d+")
 
 
 def extract_numbers(text: str) -> list[float]:
+    # ".500" (shooting idiom) parses as 0.5, not 500 (audit C8)
     return [float(m.replace(",", "")) for m in _NUM_RE.findall(text)]
 
 
@@ -49,14 +49,15 @@ def derived_numbers(table: Table, max_column_cells: int = 40) -> set[float]:
 
 
 def score_text(text: str, table: Table, allow_derived: bool = True) -> dict:
-    """Tiered support: 'exact' (number appears in a cell) is a much stronger
-    signal than 'derived' (reachable via some same-column sum/difference) —
-    on dense tables like box scores the derived set blankets most small
-    integers, so the two tiers are reported separately and the week-3 pilot
-    decides which to headline."""
+    """Tiered support: 'exact' (number appears in a cell) is a stronger
+    signal than 'derived' (reachable via some same-column sum/difference);
+    on dense tables the derived set covers most small integers, so the two
+    tiers are reported separately."""
     exact_set = table_numbers(table)
     derived_set = derived_numbers(table) if allow_derived else set()
     found = extract_numbers(text)
+    # fraction/percent duality: ".500" is supported by a 50 in a _PCT cell
+    exact_set |= {_key(v / 100) for v in list(exact_set)}
     n_exact = sum(1 for n in found if _key(n) in exact_set)
     derived = [n for n in found if _key(n) not in exact_set and _key(n) in derived_set]
     unsupported = [

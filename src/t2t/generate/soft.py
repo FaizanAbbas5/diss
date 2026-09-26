@@ -78,8 +78,8 @@ def load_checkpoint(path: str | Path, map_location: str = "cpu") -> dict:
 
 def resolve_checkpoint(cfg: dict, results_dir: str | Path = "results") -> Path:
     """Generation configs point at training runs via train_config (path to
-    the training yaml — resolved through the same run_dir hashing, so no
-    hash ever gets hardcoded) or an explicit checkpoint path."""
+    the training yaml, resolved through the same run_dir hashing so no
+    hash is hardcoded) or an explicit checkpoint path."""
     if cfg.get("checkpoint"):
         return Path(cfg["checkpoint"])
     if cfg.get("train_config"):
@@ -199,6 +199,13 @@ def run_generation_soft(cfg: dict, examples: list[Example], out_dir: str | Path)
     spec = get_spec(prompt_name)
     batch_size = int(cfg.get("batch_size", 1))
     max_new = int(cfg.get("max_new_tokens", 128))
+    # table text must match what the checkpoint was TRAINED with; default to
+    # the training config's serialisation so a mismatch cannot happen
+    from ..serialise import get_serialiser
+
+    serialise = get_serialiser(
+        cfg.get("serialisation", ckpt["config"].get("serialisation", "markdown"))
+    )
 
     with open(gen_path, "a", encoding="utf-8") as out:
         for start in range(0, len(todo), batch_size):
@@ -220,7 +227,7 @@ def run_generation_soft(cfg: dict, examples: list[Example], out_dir: str | Path)
                     parts = [embed_layer(prefix_t), soft[i]]
                     if variant in ("augmentation", "random"):
                         table_ids = tokenizer.encode(
-                            to_markdown(ex.table), add_special_tokens=False
+                            serialise(ex.table), add_special_tokens=False
                         )
                         parts.append(embed_layer(torch.tensor(table_ids, device=device)))
                     parts.append(embed_layer(suffix_t))

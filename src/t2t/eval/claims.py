@@ -10,10 +10,10 @@ This catches the hallucinations the number checker cannot see: unsupported
 qualitative claims ("upscale eatery") and contradictions ("family-friendly"
 when the table says familyFriendly: no).
 
-v0 limitations, to be validated against the week-3 manual pilot: regex
-sentence splitting; premise capped at `max_premise_chars` (very long row
-sets are truncated in retrieval order); NLI operates on stilted
-"column: value" premises rather than fluent sentences.
+Known limitations: regex sentence splitting; premise capped at
+`max_premise_chars` (very long row sets are truncated in retrieval
+order); NLI operates on "column: value" premises rather than fluent
+sentences.
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from ..data.types import Section, Table
 DEFAULT_NLI_MODEL = "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli"
 
 # Split on sentence-final punctuation followed by whitespace and a capital
-# or digit. Good enough for model-generated prose; validated in the pilot.
+# or digit.
 _SENT_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\"'])")
 
 _STOPWORDS = {"the", "and", "for", "out", "city", "new"}
@@ -35,6 +35,27 @@ ScorerFn = Callable[[list[tuple[str, str]]], list[dict[str, float]]]
 
 def split_sentences(text: str) -> list[str]:
     return [s.strip() for s in _SENT_RE.split(text.strip()) if s.strip()]
+
+
+# NLI hypotheses are single clauses, not compound sentences: the evaluator
+# audit found factually-correct "X led ..., while Y paced ..." sentences
+# labelled CONTRADICTION. Split at ';', ', while', and ', and' only when a
+# new capitalised subject follows (mirrors the relational clause splitter).
+_NLI_CLAUSE_RE = re.compile(r";\s+|,\s+while\s+|,\s+and\s+(?=[A-Z])")
+
+
+def split_claim_units(text: str) -> list[str]:
+    """Claim units for NLI scoring: clause-level, with degenerate fragments
+    (e.g. "23).") dropped. The single tokenisation used by both the batch
+    path (score_run_claims) and the per-item path (score_text_claims), so
+    all consumers report identical numbers."""
+    units = []
+    for s in split_sentences(text):
+        for c in _NLI_CLAUSE_RE.split(s):
+            c = c.strip(" ,")
+            if c and len(re.findall(r"[A-Za-z]{2,}", c)) >= 3:
+                units.append(c)
+    return units
 
 
 def _entity_tokens(entity: str) -> set[str]:
@@ -58,11 +79,10 @@ def _row_facts(sec: Section, row: list) -> str:
 def _derived_result_facts(table: Table) -> list[str]:
     """Explicit game-result sentences for two-row sections with a points
     column. NLI models cannot compare 122 > 95 themselves, so without this
-    every true "X defeated Y" sentence is judged unverifiable — the dominant
-    false-positive class found in the week-2 Groq pilot."""
+    every true "X defeated Y" sentence is judged unverifiable."""
     facts = []
     for sec in table.sections:
-        # Two competitors with a points column — not e.g. a 2-player section.
+        # Two competitors with a points column, not e.g. a 2-player section.
         if len(sec.rows) != 2 or "team" not in sec.name.lower():
             continue
         for ci, col in enumerate(sec.columns):
@@ -160,12 +180,12 @@ class NLIScorer:
 
 
 def score_text_claims(text: str, table: Table, scorer: ScorerFn) -> dict:
-    sentences = split_sentences(text)
-    if not sentences:
+    units = split_claim_units(text)
+    if not units:
         return {"n_claims": 0, "entailed_rate": None, "claims": []}
-    probs = scorer([(build_premise(table, s), s) for s in sentences])
+    probs = scorer([(build_premise(table, u), u) for u in units])
     claims = []
-    for sentence, p in zip(sentences, probs):
+    for sentence, p in zip(units, probs):
         label = max(p, key=p.get)
         claims.append({"sentence": sentence, "label": label, "probs": p})
     n_entailed = sum(1 for c in claims if c["label"] == "entailment")
@@ -188,10 +208,10 @@ def score_run_claims(
     if scorer is None:
         scorer = NLIScorer(model_name)
 
-    pair_index: list[tuple[str, str]] = []  # (item_id, sentence)
+    pair_index: list[tuple[str, str]] = []  # (item_id, claim unit)
     pairs: list[tuple[str, str]] = []
     for i, text in outputs.items():
-        for s in split_sentences(text):
+        for s in split_claim_units(text):
             pair_index.append((i, s))
             pairs.append((build_premise(tables[i], s), s))
     all_probs = scorer(pairs)

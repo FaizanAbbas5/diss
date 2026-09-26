@@ -4,8 +4,8 @@ Loss = LM cross-entropy on reference tokens through the frozen LLM
 (+ aux_weight * BCE on per-cell "mentioned" labels). AdamW on the trainable
 module only, cosine schedule with warmup, gradient accumulation to the
 configured effective batch. Checkpoints every checkpoint_every optimizer
-steps to the hashed run dir and resumes automatically — Colab/HPC sessions
-may die at any step. Resume restarts the (seeded) dataloader shuffle at an
+steps to the hashed run dir and resumes automatically, since sessions may
+be interrupted at any step. Resume restarts the (seeded) dataloader shuffle at an
 epoch boundary; step count and optimizer/scheduler state are exact.
 
 CPU smoke uses fp32 0.5B; GPU runs use 4-bit NF4 (Linear4bit backprops
@@ -31,7 +31,8 @@ _ENCODER_KEYS = ("col_id", "kind", "num_feats", "str_bucket", "is_key", "cell_ma
 def _save_checkpoint(path: Path, payload: dict) -> None:
     import torch
 
-    tmp = path.with_suffix(".tmp")  # atomic-ish: never leave a torn file
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")  # write-then-rename: never leave a torn file
     torch.save(payload, tmp)
     tmp.replace(path)
 
@@ -64,9 +65,17 @@ def train(cfg: dict, results_dir: str | Path = "results") -> Path:
         model.gradient_checkpointing_enable(
             gradient_checkpointing_kwargs={"use_reentrant": False}
         )
+        # transformers only applies checkpointing when self.training is
+        # True, and load_model_and_tokenizer calls model.eval(); without
+        # this line the flag is set but inert and full activations are
+        # kept (OOM on 20GB at augmentation sequence lengths). Qwen2 has
+        # no dropout, so train() changes nothing else.
+        model.train()
     device = next(model.parameters()).device
     embed_layer = model.get_input_embeddings()
     hidden_size = model.config.hidden_size
+
+    from ..serialise import get_serialiser
 
     dataset = Arm2Dataset(
         examples,
@@ -78,6 +87,7 @@ def train(cfg: dict, results_dir: str | Path = "results") -> Path:
         filter_refs=bool(cfg.get("filter_references", False)),
         max_refs_per_example=int(cfg.get("max_refs_per_example", 1)),
         max_ref_tokens=int(cfg.get("max_ref_tokens", 512)),
+        serialise=get_serialiser(cfg.get("serialisation", "markdown")),
     )
     if len(dataset) == 0:
         raise ValueError("Dataset is empty after filtering")
@@ -163,6 +173,9 @@ def train(cfg: dict, results_dir: str | Path = "results") -> Path:
             epoch += 1
 
     batch_iter = batches()
+    # The run dir was created at startup, but model loading takes minutes;
+    # recreate it in case an external sync or cleanup removed it.
+    out.mkdir(parents=True, exist_ok=True)
     with open(log_path, "a", encoding="utf-8") as log:
         while step < max_steps:
             t0 = time.time()
@@ -176,16 +189,28 @@ def train(cfg: dict, results_dir: str | Path = "results") -> Path:
                 b_idx = torch.arange(soft.shape[0], device=device).unsqueeze(1)
                 embeds[b_idx, batch["soft_pos"]] = soft.to(embeds.dtype)
 
-                lm_out = model(
+                # Base model + LM head on loss positions only. Passing
+                # labels= to the causal-LM head materialises full-sequence
+                # logits in fp32 (~2k tokens x 152k vocab), an OOM at
+                # augmentation sequence lengths. The loss is masked to
+                # reference tokens anyway; computing logits just there is
+                # mathematically identical (same mean CE over non-ignored
+                # positions as the HF labels= path).
+                hidden = model.model(
                     inputs_embeds=embeds,
                     attention_mask=batch["attention_mask"],
-                    labels=batch["labels"],
+                ).last_hidden_state
+                shift_labels = batch["labels"][:, 1:]
+                sel = shift_labels != -100
+                logits = model.lm_head(hidden[:, :-1][sel]).float()
+                lm_loss = torch.nn.functional.cross_entropy(
+                    logits, shift_labels[sel]
                 )
                 mask = batch["cell_mask"]
                 aux_loss = bce(aux_logits[mask], batch["aux_labels"][mask])
-                loss = lm_out.loss + aux_weight * aux_loss
+                loss = lm_loss + aux_weight * aux_loss
                 (loss / grad_accum).backward()
-                lm_sum += lm_out.loss.item()
+                lm_sum += lm_loss.item()
                 aux_sum += aux_loss.item()
 
             torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
@@ -213,6 +238,6 @@ def train(cfg: dict, results_dir: str | Path = "results") -> Path:
                 save(step)
 
     if math.isnan(lm_sum):
-        raise RuntimeError("LM loss is NaN — check dtype/lr")
+        raise RuntimeError("LM loss is NaN: check dtype/lr")
     print(f"Done: {step} steps -> {ckpt_path}")
     return out

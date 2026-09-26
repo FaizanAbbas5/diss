@@ -1,19 +1,19 @@
 """Deterministic Table -> fact-sheet serialisation (template arm).
 
-The selection + derivation policy below IS the engineered representation
-under test (docs/factsheet-arm-design.md). No LLM is involved anywhere in
-sheet construction: every number is copied from a table cell or derived by
-the shared t2t.facts core (margin), so the sheet cannot contain
-fabrications — pinned by the invariant test in tests/test_factsheet.py.
+The selection and derivation policy below is the engineered representation
+under test. No LLM is involved anywhere in sheet construction: every
+number is copied from a table cell or derived by the shared t2t.facts core
+(margin), so the sheet cannot contain fabrications; this invariant is
+pinned by tests/test_factsheet.py.
 
 Policy is versioned: any change to selection rules, thresholds, ordering,
 or wording bumps VERSION, and configs carry it as `factsheet_version` so
 the config hash separates old runs from new.
 
 Dispatch is structural: a table on which GameFacts derives (teams section
-with numeric TEAM-PTS) renders as a box-score sheet (rotowire.j2); anything
-else — E2E, and pathological box scores — renders as labelled
-attribute/value lines (e2e.j2), a near-null transformation.
+with numeric TEAM-PTS) renders as a box-score sheet (rotowire.j2);
+anything else, including E2E, renders as labelled attribute/value lines
+(e2e.j2), a near-null transformation.
 
 Sheet labels must not contain digits ("three-point %", never "3PT%"): a
 digit in a label would be flagged by the number checker the sheet is

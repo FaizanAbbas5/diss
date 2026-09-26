@@ -6,10 +6,10 @@ a word boundary. Entity cells (key columns) additionally go through the
 alias machinery of t2t.facts (nicknames, unique surnames) when the table is
 a box score, so "DeRozan" credits the "DeMar DeRozan" cell.
 
-filter_reference implements the plan.md answer to the 45%-extrinsic
-problem: keep only reference sentences that contain at least one aligned
-fact and no relational error (t2t.eval.relations). Both filtered and
-unfiltered paths stay runnable — a dissertation decision point.
+filter_references keeps only reference sentences that contain at least
+one aligned fact and no relational error (t2t.eval.relations), removing
+the pressure to imitate extrinsic gold content. Both filtered and
+unfiltered paths stay runnable.
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def _key(x: float) -> float:
 
 def _word_boundary_match(value: str, text_lower: str) -> bool:
     """Lookarounds rather than \\b so values with punctuation still anchor
-    ('£20-25', '5 out of 5') — same approach as GameFacts._find_alias."""
+    ('£20-25', '5 out of 5'), the same approach as GameFacts._find_alias."""
     value = value.strip().lower()
     if not value:
         return False

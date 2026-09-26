@@ -8,12 +8,18 @@ whitespace-tokenised, matching common PARENT usage.
 """
 from __future__ import annotations
 
+import re
+
 from ..data.types import Table
 from ._parent_impl import parent
 
 
 def _tok(text: str) -> list[str]:
-    return text.lower().split()
+    """Punctuation-splitting tokenisation applied to BOTH sides. RotoWire
+    references are pre-tokenised ("76ers , 122 - 95") while model output is
+    raw ("76ers, 122-95"); whitespace tokenisation scored identical content
+    as different n-grams, deflating PARENT for every system (audit C9)."""
+    return re.findall(r"\w+|[^\w\s]", text.lower())
 
 
 def table_to_parent_format(table: Table) -> list[tuple[list[str], list[str]]]:

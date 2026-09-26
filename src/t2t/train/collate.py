@@ -2,8 +2,8 @@
 
 Produces right-padded batches (fine for teacher forcing; generation uses
 left padding in t2t.generate.soft). Soft-token positions carry the pad id
-in input_ids as a placeholder — the training loop overwrites their
-embeddings with the encoder output via soft_pos — and are covered by the
+in input_ids as a placeholder (the training loop overwrites their
+embeddings with the encoder output via soft_pos) and are covered by the
 attention mask. Labels are -100 everywhere except reference tokens, so
 prompt, soft, table, and padding positions never contribute to the LM loss.
 """
