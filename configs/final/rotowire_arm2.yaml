@@ -1,0 +1,14 @@
+# Final run: soft-token arm (augmentation + filtered references), held-out
+# test split, all 728 games. Reads the checkpoint trained on the RotoWire
+# train split; the column vocabulary and numeric statistics come from
+# training data only, so the test split stays unseen.
+name: final-rotowire-arm2
+backend: soft
+train_config: configs/arm2_rotowire_hpc_aug_filtered.yaml
+dataset: rotowire
+split: test
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+max_new_tokens: 320
+batch_size: 2
+seed: 13

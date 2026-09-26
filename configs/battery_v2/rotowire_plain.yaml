@@ -1,0 +1,13 @@
+# Prompt battery pilot: seeded random n=150 of the 727 validation games.
+# sample_seed is shared across prompts, so items are paired.
+name: rw-v2-plain
+dataset: rotowire
+split: validation
+limit: 150
+sample_seed: 7
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+prompt: rotowire/plain_v1
+max_new_tokens: 320
+batch_size: 2
+seed: 13

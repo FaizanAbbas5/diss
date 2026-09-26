@@ -1,0 +1,14 @@
+# Final run: fact-sheet arm, held-out test split, all 728 games. Paired
+# against final-rotowire-baseline: identical prompt, split and decoding;
+# only the serialisation differs.
+name: final-rotowire-factsheet
+dataset: rotowire
+split: test
+serialisation: factsheet
+factsheet_version: v1
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+prompt: rotowire/faithful_v1
+max_new_tokens: 320
+batch_size: 2
+seed: 13

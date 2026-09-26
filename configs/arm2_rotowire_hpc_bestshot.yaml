@@ -1,0 +1,29 @@
+# Replacement variant at scale: five times the steps with a live LR
+# schedule (the 2000-step cosine decayed to zero mid-learning) and four
+# times the channel capacity (k=64). Tests whether added capacity and
+# optimisation restore grounding.
+name: arm2-rotowire-hpc-bestshot
+dataset: rotowire
+split: train
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+gradient_checkpointing: true
+prompt: rotowire/faithful_v1
+variant: replacement
+k: 64
+d: 256
+n_heads: 4
+n_layers: 2
+qformer_layers: 1
+lr: 1.0e-4
+warmup_ratio: 0.02
+max_steps: 10000
+batch_size: 1
+grad_accum: 16
+aux_weight: 0.3
+filter_references: false
+max_refs_per_example: 1
+max_ref_tokens: 512
+checkpoint_every: 250
+log_every: 10
+seed: 13

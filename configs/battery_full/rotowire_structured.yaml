@@ -1,0 +1,14 @@
+# Prompt battery, confirmatory run on the complete RotoWire validation
+# split (all 727 games; no limit, so no sampling and no sample_seed).
+# Protocol and decision rule pre-specified after the n=150 pilot
+# (configs/battery_v2/). Paired by construction: every prompt sees the
+# same 727 games.
+name: rw-full-structured
+dataset: rotowire
+split: validation
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+prompt: rotowire/structured_v1
+max_new_tokens: 320
+batch_size: 2
+seed: 13

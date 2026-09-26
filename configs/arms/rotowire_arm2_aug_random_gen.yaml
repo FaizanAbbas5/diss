@@ -1,0 +1,14 @@
+# Attribution control: k fixed random vectors in place of the learned soft
+# tokens, markdown table still present. If PARENT stays at baseline, the
+# gain is attributable to training, not to extra prompt vectors.
+name: rw-full-arm2aug-random
+backend: soft
+train_config: configs/arm2_rotowire_hpc_aug.yaml
+variant: random
+dataset: rotowire
+split: validation
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+max_new_tokens: 320
+batch_size: 2
+seed: 13

@@ -1,0 +1,11 @@
+# Prompt battery (baseline selection): e2e/strict_v1 on 100 dev items.
+name: e2e-prompt-strict
+dataset: e2e_cleaned
+split: validation
+limit: 100
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+prompt: e2e/strict_v1
+max_new_tokens: 96
+batch_size: 4
+seed: 13

@@ -1,0 +1,15 @@
+# Fact-sheet arm on the full RotoWire validation split, paired against
+# rw-full-structured (identical prompt, split and decoding; only the
+# serialisation differs), so per-item differences isolate the fact-sheet
+# intervention.
+name: rw-full-fs-structured
+dataset: rotowire
+split: validation
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+prompt: rotowire/structured_v1
+serialisation: factsheet
+factsheet_version: v1
+max_new_tokens: 320
+batch_size: 2
+seed: 13

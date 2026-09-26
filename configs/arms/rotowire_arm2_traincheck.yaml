@@ -1,0 +1,15 @@
+# Diagnostic: generate from the replacement checkpoint on 100 training
+# games (seen during training). Wrong-game outputs indicate an
+# optimisation or capacity failure; grounded outputs indicate a
+# generalisation gap.
+name: arm2-rw-traincheck
+backend: soft
+train_config: configs/arm2_rotowire_hpc.yaml
+dataset: rotowire
+split: train
+limit: 100
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+max_new_tokens: 320
+batch_size: 2
+seed: 13

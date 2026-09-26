@@ -1,0 +1,15 @@
+# Final run: hybrid (fact sheet + soft tokens + filtered references),
+# held-out test split, all 728 games. Reported as a fourth row distinct
+# from the three arms: it varies two things from baseline (serialisation
+# and learned encoding), so its relational accuracy is not credited to
+# the neural arm alone.
+name: final-rotowire-hybrid
+backend: soft
+train_config: configs/arm2_rotowire_hpc_aug_fs_filtered.yaml
+dataset: rotowire
+split: test
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+max_new_tokens: 320
+batch_size: 2
+seed: 13

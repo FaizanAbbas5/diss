@@ -1,0 +1,11 @@
+# Generation twin of configs/arm2_rotowire_hpc_aug_fs.yaml on the full validation split.
+name: rw-full-arm2aug-fs
+backend: soft
+train_config: configs/arm2_rotowire_hpc_aug_fs.yaml
+dataset: rotowire
+split: validation
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+max_new_tokens: 320
+batch_size: 2
+seed: 13

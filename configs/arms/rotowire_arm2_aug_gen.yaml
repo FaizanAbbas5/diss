@@ -1,0 +1,14 @@
+# Augmentation variant on the full RotoWire validation split: markdown
+# table plus trained soft tokens, against rw-full-faithful (same prompt,
+# table only). Tests whether the learned encoding adds faithfulness over
+# text alone.
+name: rw-full-arm2aug-faithful
+backend: soft
+train_config: configs/arm2_rotowire_hpc_aug.yaml
+dataset: rotowire
+split: validation
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+max_new_tokens: 320
+batch_size: 2
+seed: 13

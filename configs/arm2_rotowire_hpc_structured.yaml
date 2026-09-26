@@ -1,0 +1,27 @@
+# Structured-prompt twin of arm2_rotowire_hpc.yaml (separate checkpoint):
+# the same training under the structured prompt.
+name: arm2-rotowire-hpc-structured
+dataset: rotowire
+split: train
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+gradient_checkpointing: true
+prompt: rotowire/structured_v1
+variant: replacement
+k: 16
+d: 256
+n_heads: 4
+n_layers: 2
+qformer_layers: 1
+lr: 1.0e-4
+warmup_ratio: 0.05
+max_steps: 2000
+batch_size: 1
+grad_accum: 16
+aux_weight: 0.3
+filter_references: false
+max_refs_per_example: 1
+max_ref_tokens: 512
+checkpoint_every: 100
+log_every: 10
+seed: 13

@@ -1,0 +1,14 @@
+# Soft-token generation on the full RotoWire validation split (727 games),
+# paired against rw-full-structured and rw-full-fs-structured: identical
+# prompt, split and decoding; the soft table encoding is the only
+# difference. Reads the trained checkpoint via train_config.
+name: rw-full-arm2-structured
+backend: soft
+train_config: configs/arm2_rotowire_hpc_structured.yaml
+dataset: rotowire
+split: validation
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+max_new_tokens: 320
+batch_size: 2
+seed: 13

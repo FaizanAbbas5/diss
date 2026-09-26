@@ -1,0 +1,12 @@
+# n=20 E2E baseline with the frozen LLM (Qwen2.5-7B-Instruct, 4-bit NF4)
+# on a T4; the Colab notebook's demonstration config.
+name: e2e-baseline-colab20
+dataset: e2e_cleaned
+split: validation
+limit: 20
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+prompt: e2e/faithful_v1
+max_new_tokens: 96
+batch_size: 4
+seed: 13

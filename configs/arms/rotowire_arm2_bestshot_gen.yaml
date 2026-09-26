@@ -1,0 +1,13 @@
+# Generation from the k=64 / 10,000-step replacement checkpoint on the
+# full validation split, paired against rw-full-arm2-faithful (k=16,
+# 2,000 steps). The key readout is the both-teams grounding rate.
+name: rw-full-arm2-bestshot
+backend: soft
+train_config: configs/arm2_rotowire_hpc_bestshot.yaml
+dataset: rotowire
+split: validation
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+max_new_tokens: 320
+batch_size: 2
+seed: 13

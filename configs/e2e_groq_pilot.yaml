@@ -1,0 +1,14 @@
+# Metric-calibration pilot via Groq's API (different model family). Not
+# the dissertation baseline: the arm comparison requires the local frozen
+# LLM, and the API returns no log-probabilities.
+# Requires GROQ_API_KEY. Models: https://console.groq.com/docs/models
+name: e2e-pilot-groq
+backend: groq
+dataset: e2e_cleaned
+split: validation
+limit: 100
+model: llama-3.1-8b-instant
+prompt: e2e/faithful_v1
+max_new_tokens: 96
+request_interval: 2.0
+seed: 13

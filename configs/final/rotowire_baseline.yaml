@@ -1,0 +1,13 @@
+# Final run: baseline on the held-out test split, all 728 games, matching
+# the 727-game validation protocol. Prompt faithful_v1: the battery found
+# the four prompt families statistically tied, and faithful is used across
+# all arms because the encoder was trained against it.
+name: final-rotowire-baseline
+dataset: rotowire
+split: test
+model: Qwen/Qwen2.5-7B-Instruct
+quantization: 4bit
+prompt: rotowire/faithful_v1
+max_new_tokens: 320
+batch_size: 2
+seed: 13
